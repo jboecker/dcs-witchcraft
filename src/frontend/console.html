@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="bootstrap-3.1.1-dist/css/bootstrap.min.css">
+	<link rel="stylesheet" href="/js/vendor/codemirror-4.3/lib/codemirror.css">
+	<link rel="stylesheet" href="/js/vendor/codemirror-4.3/theme/neat.css">
+	<style>
+	.CodeMirror {
+		border: 1px solid #eee;
+		height: auto;
+	}
+	.CodeMirror-scroll {
+		overflow-y: hidden;
+		overflow-x: auto;
+	}
+	.luasnippet {
+		margin-top: 10px;
+		margin-left: 10px;
+		margin-right: 10px;
+		border-radius: 5px;
+		padding: 5px;
+		border: 1px solid #ddd;
+	}
+	.luaoutput {
+		white-space: pre-wrap;
+		font-family: monospace;
+	}
+	.luaoutput-scrolling {
+		min-height: 2em;
+		max-height: 20em;
+		overflow: auto;
+		box-shadow: inset 0px -20px 30px -20px black;
+	}
+	.scrolltoggle-gutter {
+		width: 2em;
+	}
+	.luasnippet-controls {
+		float: right;
+		background-color: inherit;
+	}
+	</style>
+  </head>
+  <body ng-app="witchcraftApp">
+	<div id="snippet-container">
+		<div ng-controller="LuaSnippetController" ng-init="setId(snippet.id)" ng-repeat="snippet in snippets"></div>
+		<button ng-click="snippetManager.appendSnippet();" style="margin-left:10px; margin-top: 10px;">New Snippet</button>
+	</div>
+	<div id="snippet-templates" style="display: none;">
+  <div title="clear"></div>
+	<div title="list all unit IDs">
+-- requires MiST to be included
+local unit_names = {}
+for _, u in pairs(mist.DBs.aliveUnits) do
+	unit_names[#unit_names+1] = u.unit:getName()
+end
+return unit_names
+	</div>
+	<div title="check user flag">
+-- to set a flag:
+-- trigger.action.setUserFlag(42, 23) -- set flag 42 to 23
+return trigger.misc.getUserFlag(42)
+	</div>
+	<div title="_G dump using MiST">
+return mist.utils.tableShow(_G)
+	</div>
+	<div title="enable unit updates">
+-- units on the map will be updated approximately two times per second
+witchcraft.unitUpdateInterval = .5
+	</div>
+	<div title="disable unit updates">
+-- disable regular unit updates
+witchcraft.unitUpdateInterval = 0
+	</div>
+  </div>
+  </body>
+  <script src="/js/vendor/jquery/jquery-2.1.1.min.js"></script>
+  <script src="bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
+  <script src="/js/vendor/codemirror-4.3/lib/codemirror.js"></script>
+  <script src="/js/vendor/codemirror-4.3/mode/lua/lua.js"></script>
+  <script src="/js/vendor/codemirror-4.3/addon/selection/active-line.js"></script>
+  <script src="/js/vendor/lodash/dist/lodash.js"></script>
+  <script>var lodash = _;</script>
+  <script src="/js/vendor/StateTree/statetree.js"></script>
+  
+  <script src="/js/vendor/angularjs/angular.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/factories/socket.js"></script>
+  <script src="/js/factories/luashell.js"></script>
+  <script src="/js/controllers/luasnippet.js"></script>
+  <script src="/js/factories/snippetmanager.js"></script>
+  
+  <script>
+  app.run(['snippetManager', function(snippetManager) {
+	snippetManager.appendSnippet();
+  }]);
+  </script>
+  
+</html>

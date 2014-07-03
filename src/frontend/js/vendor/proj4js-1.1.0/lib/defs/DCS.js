@@ -1,0 +1,1 @@
+Proj4js.defs["DCS"]="+proj=tmerc +lat_0=0 +lon_0=33 +k_0=0.9996 +x_0=-99517 +y_0=-4998115 +units=m +no_defs"

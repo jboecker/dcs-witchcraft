@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="bootstrap-3.1.1-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="js/vendor/ol3/css/ol.css"/>
+    <link rel="stylesheet" href="map.css"/>
+  </head>
+  <body ng-app="witchcraftApp" ng-controller="MapAppController">
+    <div id="mapdiv" ng-controller="MapController">
+    </div>
+    
+    <div id="toolbar" role="toolbar" ng-show="ui.availableTools.length">
+      <button ng-repeat="tool in ui.availableTools"
+              type="button"
+              class="btn btn-default"
+              ng-class="{ active: ui.toolStates[tool].isActive() }",
+              ng-click="ui.toolStates[tool].goTo()"
+              >{{ ui.toolDisplayNames[tool] }}</button>
+    </div>
+    
+    <div id="tooloptions" ng-show="ui.activeTool">
+      <div ng-show="ui.activeTool == 'move-tool'">
+        <ul>
+          <li>Drag to pan</li>
+          <li>Shift+Drag to zoom to area</li>
+          <li>Mousewheel to zoom</li>
+          <li>Alt+Shift+Drag to rotate</li>
+        </ul>
+      </div>
+
+      <div ng-show="ui.activeTool == 'ping-tool'">
+        Dobule-click a map location to point it out.
+      </div>
+
+      <div ng-show="ui.activeTool == 'clipmap-tool'">
+        <div class="btn-group-vertical">
+          <button type="button"
+                  class="btn btn-default"
+                  ng-class="{ active: ui.isStateActive('clipmap-tool/add') }"
+                  ng-click="ui.gotoState('clipmap-tool/add')"
+                  >Add a map area</button>
+          <button type="button"
+                  class="btn btn-default"
+                  ng-class="{ active: ui.isStateActive('clipmap-tool/delete') }"
+                  ng-click="ui.gotoState('clipmap-tool/delete')"
+                  >Delete a map area</button>
+        </div>
+      </div>
+
+      <div ng-show="ui.activeTool == 'smoke-tool'">
+        Double-click a map location to place smoke.<br>
+        <select ng-model="ui.smokeColor">
+          <option value="Green">Green</option>
+          <option value="Red">Red</option>
+          <option value="Orange">Orange</option>
+          <option value="White">White</option>
+        </select>
+      </div>
+      
+      <div ng-show="ui.activeTool == 'debug-tool'">
+        <input type="checkbox" ng-model="ui.showFriendlyTrackingEdges" id="friendlytrechk" checked="true"><label for="friendlytrechk">show friendly tracking edges</label><br>
+        <input type="checkbox" ng-model="ui.showHostileTrackingEdges" id="hostiletrechk"><label for="hostiletrechk">show hostile tracking edges</label>
+      </div>
+
+
+      <hr style="border-bottom: 1px dashed #aaa;">
+      <span id="hoveredFeatureInfo"></span>
+    </div>
+    
+    <div id="popup" ng-show="!!ui.displayedPopup">
+      <div id="greeting_popup" ng-show="ui.displayedPopup == 'greeting'">
+        <h1>Project Witchcraft Map</h1>
+		Loading... (JavaScript has to be enabled)
+      </div>
+    </div>
+
+  </body>
+  <script src="/js/vendor/jquery/jquery-2.1.1.min.js"></script>
+  <script src="bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
+  <script src="/js/vendor/lodash/dist/lodash.js"></script>
+  <script>var lodash = _;</script>
+  <script src="/js/vendor/StateTree/statetree.js"></script>
+  
+  <script src="/js/vendor/three-r67/three.js"></script>
+  <script src="/js/vendor/angularjs/angular.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/vendor/proj4js-1.1.0/lib/proj4js-combined.js"></script>
+  <script src="/js/vendor/ol3/build/ol-whitespace.js"></script>
+  <script>
+
+    ol.proj.configureProj4jsProjection({
+    code: "dcs",
+    units: ol.proj.Units.METERS,
+    });
+    
+  </script>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/unitdata.js"></script>
+  <script src="/js/controllers/map.js"></script>
+  <script src="/js/factories/uistate.js"></script>
+  <script src="/js/factories/model.js"></script>
+  <script src="/js/factories/socket.js"></script>
+  
+<script>
+	app.controller('MapAppController', ['$scope', 'uistate', function($scope, uistate) {
+		setTimeout(function() {
+			uistate.getUIScope().stateFromName("mapView").goTo();
+		}, 0);
+	}]);
+  </script>
+  
+</html>
