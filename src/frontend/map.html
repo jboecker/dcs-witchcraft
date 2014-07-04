@@ -57,6 +57,10 @@
         </select>
       </div>
       
+      <div ng-show="ui.activeTool == 'lua-interaction-tool'">
+        Double-click the map for lua magic!
+      </div>	  
+	  
       <div ng-show="ui.activeTool == 'debug-tool'">
         <input type="checkbox" ng-model="ui.showFriendlyTrackingEdges" id="friendlytrechk" checked="true"><label for="friendlytrechk">show friendly tracking edges</label><br>
         <input type="checkbox" ng-model="ui.showHostileTrackingEdges" id="hostiletrechk"><label for="hostiletrechk">show hostile tracking edges</label>
@@ -101,6 +105,7 @@
   <script src="/js/factories/uistate.js"></script>
   <script src="/js/factories/model.js"></script>
   <script src="/js/factories/socket.js"></script>
+  <script src="/js/factories/luashell.js"></script>
   
 <script>
 	app.controller('MapAppController', ['$scope', 'uistate', function($scope, uistate) {

@@ -63,6 +63,154 @@ return trigger.misc.getUserFlag(42)
 	<div title="_G dump using MiST">
 return mist.utils.tableShow(_G)
 	</div>
+	<div title="spawn HMMWVs (Lua Interaction)">
+-- 1. Execute this code
+-- 2. In another tab, have the map open and select the "Lua Interaction" tool
+-- 3. Place the camera in DCS: World so it looks at where you are about to place units
+-- 4. Mousewheel rotates, left click places a HMMWV
+witchcraft.heading = 0.0 -- global variable
+function respawn_unit(event, copy)
+    lastevent = event
+
+    local unitsTable = {
+        ["visible"] = false,
+        ["taskSelected"] = true,
+        ["route"] = 
+        {
+            ["spans"] = 
+            {
+            }, -- end of ["spans"]
+            ["points"] = 
+            {
+                [1] = 
+                {
+                    ["alt"] = event.vec3.y,
+                    ["type"] = "Turning Point",
+                    ["ETA"] = 0,
+                    ["alt_type"] = "BARO",
+                    ["formation_template"] = "",
+                    ["y"] = event.vec2.y,
+                    ["x"] = event.vec2.x,
+                    ["ETA_locked"] = true,
+                    ["speed"] = 5.5555555555556,
+                    ["action"] = "Off Road",
+                    ["task"] = 
+                    {
+                        ["id"] = "ComboTask",
+                        ["params"] = 
+                        {
+                            ["tasks"] = 
+                            {
+                                [1] = 
+                                {
+                                    ["enabled"] = true,
+                                    ["auto"] = true,
+                                    ["id"] = "WrappedAction",
+                                    ["number"] = 1,
+                                    ["params"] = 
+                                    {
+                                        ["action"] = 
+                                        {
+                                            ["id"] = "EPLRS",
+                                            ["params"] = 
+                                            {
+                                                ["value"] = true,
+                                                ["groupId"] = 2,
+                                            }, -- end of ["params"]
+                                        }, -- end of ["action"]
+                                    }, -- end of ["params"]
+                                }, -- end of [1]
+                            }, -- end of ["tasks"]
+                        }, -- end of ["params"]
+                    }, -- end of ["task"]
+                    ["speed_locked"] = true,
+                }, -- end of [1]
+            }, -- end of ["points"]
+        }, -- end of ["route"]
+        ["groupId"] = 30,
+        ["tasks"] = 
+        {
+        }, -- end of ["tasks"]
+        ["hidden"] = false,
+        ["units"] = 
+        {
+            [1] = 
+            {
+                ["y"] = event.vec2.y,
+                ["type"] = "M1043 HMMWV Armament",
+                ["name"] = "cursor_unit",
+                ["unitId"] = 30,
+                ["heading"] = witchcraft.heading,
+                ["playerCanDrive"] = true,
+                ["skill"] = "Average",
+                ["x"] = event.vec2.x,
+            }, -- end of [1]
+        }, -- end of ["units"]
+        ["y"] = event.vec2.y,
+        ["x"] = event.vec2.x,
+        ["name"] = "CursorGroup",
+        ["start_time"] = 0,
+        ["task"] = "Ground Nothing",
+    }
+
+    unitsTable.country = "USA"
+    unitsTable.category = "vehicle"
+
+    if copy then
+        unitsTable.groupId = nil
+        unitsTable.name = nil
+        unitsTable.units[1].unitId = nil
+        unitsTable.units[1].name = nil
+    end
+
+    mist.dynAdd(unitsTable)
+
+end
+
+-- define event handlers
+-- event handlers will be passed an event object with the
+-- following properties:
+--     vec2: click position
+--     vec3: click position (altitude determined by land.getHeight)
+
+-- onClick: called for every click on the map
+witchcraft.onClick = nil
+
+-- onSingleClick: called after 250 ms when OpenLayers has
+-- determined this is not a drag action or double click
+witchcraft.onSingleClick = function(event)
+    Unit.getByName("cursor_unit"):destroy()
+    respawn_unit(event, true)
+    respawn_unit(event)
+end
+
+-- onDblClick: for double clicks
+witchcraft.onDblClick = nil
+
+-- onMousewheel: handles mousewheel events
+-- event.deltaY has the direction info (typically +3 or -3)
+witchcraft.onMousewheel = function(event)
+    if event.deltaY < 0 then
+        witchcraft.heading = witchcraft.heading - .1
+    else
+        witchcraft.heading = witchcraft.heading + .1
+    end
+    respawn_unit(event)
+end
+
+-- onMove: called when the pointer is moved over the map
+-- rate-limited to 10 times per second
+witchcraft.onMove = function(event)
+    respawn_unit(event)
+end
+	</div>
+	<div title="disable all Lua Interaction event handlers">
+witchcraft.onClick = nil
+witchcraft.onSingleClick = nil
+witchcraft.onDblClick = nil
+witchcraft.onMousewheel = nil
+witchcraft.onMove = nil
+	</div>
 	<div title="enable unit updates">
 -- units on the map will be updated approximately two times per second
 witchcraft.unitUpdateInterval = .5

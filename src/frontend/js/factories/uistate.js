@@ -63,7 +63,7 @@ app.factory('uistate', ['$rootScope', 'socket', function($rootScope, socket) {
         .defaultState()
         .enter(function() {
             uiScope.clipboxes = null;
-            uiScope.availableTools = ["move-tool", "ping-tool", "smoke-tool", "follow-tool"];
+            uiScope.availableTools = ["move-tool", "ping-tool", "smoke-tool", "follow-tool", "lua-interaction-tool"];
             uiScope.toolStates["move-tool"].goTo();
         });
     });
@@ -249,4 +249,86 @@ app.run(["uistate", "socket", "$rootScope", function(uistate, socket, $rootScope
         });
     });
     uistate.registerTool("Follow", tool);
+}]);
+
+
+goog.provide("app.MapBrowserEventProxy");
+goog.require("ol.MapBrowserEvent");
+goog.require("ol.MapBrowserEvent.EventType");
+goog.require("ol.interaction.Interaction");
+app.MapBrowserEventProxy = function(callback) {
+    goog.base(this);
+    this.callback_ = callback;
+};
+goog.inherits(app.MapBrowserEventProxy, ol.interaction.Interaction);
+
+app.MapBrowserEventProxy.prototype.handleMapBrowserEvent = function(mapBrowserEvent) {
+	try {
+		return this.callback_(mapBrowserEvent);
+	} catch(e) {
+		console.log(e);
+		return true;
+	}
+	/*
+    if (mapBrowserEvent.type == ol.MapBrowserEvent.EventType.DBLCLICK) {
+        this.callback_(mapBrowserEvent);
+        return false;
+    };
+    return true;
+	*/
+};
+app.run(["uistate", "luashell", function(uistate, luashell) {
+    var tool = uistate.toolStates.subState("lua-interaction-tool", function(luaInteractionTool) {
+        var interaction;
+        var ui = uistate.getUIScope()
+		var lastMoveEventTime = Date.now()
+		var lastMoveX = null;
+		var lastMoveZ = null;
+		
+        luaInteractionTool.enter(function() {
+            uistate.getUIScope().activeTool = "lua-interaction-tool";
+            
+            interaction = new app.MapBrowserEventProxy(function(event) {
+				var dcs_zx = ol.proj.transform(event.coordinate, "EPSG:4326", "DCS");
+				var cmd2 = null;
+                var cmd = 'local __x = '+dcs_zx[1]+'\n' +
+						  'local __z = '+dcs_zx[0]+'\n' + 
+						  'local __y = land.getHeight({ x = __x, y = __z })\n' + 
+						  'local event = { vec2 = { x = __x, y = __z }, vec3 = { x = __x, y = __y, z = __z } }\n';
+				if (event.type == ol.MapBrowserEvent.EventType.CLICK)
+						  cmd2 = 'if witchcraft.onClick then witchcraft.onClick(event) end\n';
+				if (event.type == ol.MapBrowserEvent.EventType.SINGLECLICK)
+						  cmd2 = 'if witchcraft.onSingleClick then witchcraft.onSingleClick(event) end\n';
+				if (event.type == ol.MapBrowserEvent.EventType.DBLCLICK)
+						  cmd2 = 'if witchcraft.onDblClick then witchcraft.onDblClick(event) end\n';
+				if (event.type == ol.MapBrowserEvent.EventType.POINTERMOVE) {
+					if (Date.now() - lastMoveEventTime > 100) {
+						if (dcs_zx[1] != lastMoveX && dcs_zx[0] != lastMoveZ) {
+							cmd2 = 'if witchcraft.onMove then witchcraft.onMove(event) end\n';
+							lastMoveEventTime = Date.now()
+							lastMoveX = dcs_zx[1]; lastMoveZ = dcs_zx[0];
+						}
+					}
+				}
+				if (event.type == goog.events.MouseWheelHandler.EventType.MOUSEWHEEL) {
+					cmd += 'event.deltaY = '+event.browserEvent.deltaY.toString()+'\n';
+					cmd2 = 'if witchcraft.onMousewheel then witchcraft.onMousewheel(event) end\n';
+				}
+				if (!cmd2) return true;
+				
+				console.log(cmd2);
+				luashell.execute(cmd+cmd2)
+				.then(function(result) {
+					console.log(result);
+				});
+				
+				return false;
+            });
+            uistate.getMapController().getMap().addInteraction(interaction);
+        });
+        luaInteractionTool.exit(function() {
+            uistate.getMapController().getMap().removeInteraction(interaction);
+        });
+    });
+    uistate.registerTool("Lua Interaction", tool);
 }]);
