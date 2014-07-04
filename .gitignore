@@ -2,9 +2,11 @@
 \#*
 src/backend/cgal-vis-check/build
 src/backend/node_modules/*
+src/backend/npm-debug.log
 src/backend/datastore.nedb
 src/frontend/buildings.json
 src/backend/buildings.bin
 */CMakeCache.txt
 */CMakeFiles/*
 */node_modules/
+*.pyc
