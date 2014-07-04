@@ -63,7 +63,7 @@ app.factory('uistate', ['$rootScope', 'socket', function($rootScope, socket) {
         .defaultState()
         .enter(function() {
             uiScope.clipboxes = null;
-            uiScope.availableTools = ["move-tool", "ping-tool", "smoke-tool", "follow-tool", "lua-interaction-tool"];
+            uiScope.availableTools = ["move-tool", "ping-tool", "smoke-tool", "follow-tool", "savepos-tool", "lua-interaction-tool"];
             uiScope.toolStates["move-tool"].goTo();
         });
     });
@@ -251,6 +251,61 @@ app.run(["uistate", "socket", "$rootScope", function(uistate, socket, $rootScope
     uistate.registerTool("Follow", tool);
 }]);
 
+app.run(["uistate", "luashell", function(uistate, luashell) {
+	var tool = uistate.toolStates.subState("savepos-tool", function(saveposTool) {
+	zip.useWebWorkers = false;
+	var zipfs = new zip.fs.FS();
+		
+		uistate.getUIScope().savepos = function() {
+			var set_status = function(st) {
+				$("#savepos-status").text(st);
+			}
+			var file = document.getElementById("savepos-file-input").files[0];
+			var filename = document.getElementById("savepos-file-input").files[0].name;
+			set_status("extracting mission...");
+			zipfs.importBlob(file, function() {
+				zipfs.find("mission").getText(function(luaCode) {
+					set_status("loading mission...");
+					
+					zipfs.importBlob(file, function() {
+						zipfs.remove(zipfs.find("mission"));
+						
+						set_status("creating new mission...");
+						luashell.execute($("#savepos-lua").text())
+						.then(function(result) {
+							var mission_str = result.result;
+							set_status("saving mission...");
+
+							zipfs.root.addText("mission", mission_str);
+							
+							set_status("opening download dialog.");
+							zipfs.exportBlob(function(blob) {
+								window.theblob = blob; // keep a reference
+								if (window.navigator.msSaveBlob) {
+									set_status("showing download dialog.");
+									window.navigator.msSaveBlob(blob, filename);
+								} else {
+									var blobURL = URL.createObjectURL(blob);
+									$("#savepos-status").html('<a href="'+blobURL+'" download="'+filename+'" target="tab">Save Result</a>');
+								}
+							});
+							
+						});
+					});
+						
+				},
+				null,
+				true,
+				"utf-8");
+			});
+		};
+		
+        saveposTool.enter(function() {
+            uistate.getUIScope().activeTool = "savepos-tool";
+        });
+    });
+    uistate.registerTool("Save Unit Positions", tool);
+}]);
 
 goog.provide("app.MapBrowserEventProxy");
 goog.require("ol.MapBrowserEvent");
@@ -289,22 +344,30 @@ app.run(["uistate", "luashell", function(uistate, luashell) {
             uistate.getUIScope().activeTool = "lua-interaction-tool";
             
             interaction = new app.MapBrowserEventProxy(function(event) {
+				var clickedUnitName = "nil";
+				var map = uistate.getMapController().getMap();
+				var pixel = map.getEventPixel(event.originalEvent);
+				map.forEachFeatureAtPixel(event.pixel, function(feature, layer) {
+					if (feature.get("object_type") == "liveunit")
+						clickedUnitName = '"'+feature.get("object_id").substr(9)+'"';
+				});
 				var dcs_zx = ol.proj.transform(event.coordinate, "EPSG:4326", "DCS");
 				var cmd2 = null;
                 var cmd = 'local __x = '+dcs_zx[1]+'\n' +
 						  'local __z = '+dcs_zx[0]+'\n' + 
 						  'local __y = land.getHeight({ x = __x, y = __z })\n' + 
-						  'local event = { vec2 = { x = __x, y = __z }, vec3 = { x = __x, y = __y, z = __z } }\n';
+						  'local event = { vec2 = { x = __x, y = __z }, vec3 = { x = __x, y = __y, z = __z }, clickedUnitName = '+clickedUnitName+' }\n';
+						  
 				if (event.type == ol.MapBrowserEvent.EventType.CLICK)
-						  cmd2 = 'if witchcraft.onClick then witchcraft.onClick(event) end\n';
+						  cmd2 = 'if witchcraft.onClick then return witchcraft.onClick(event) end\n';
 				if (event.type == ol.MapBrowserEvent.EventType.SINGLECLICK)
-						  cmd2 = 'if witchcraft.onSingleClick then witchcraft.onSingleClick(event) end\n';
+						  cmd2 = 'if witchcraft.onSingleClick then return witchcraft.onSingleClick(event) end\n';
 				if (event.type == ol.MapBrowserEvent.EventType.DBLCLICK)
-						  cmd2 = 'if witchcraft.onDblClick then witchcraft.onDblClick(event) end\n';
+						  cmd2 = 'if witchcraft.onDblClick then return witchcraft.onDblClick(event) end\n';
 				if (event.type == ol.MapBrowserEvent.EventType.POINTERMOVE) {
 					if (Date.now() - lastMoveEventTime > 100) {
 						if (dcs_zx[1] != lastMoveX && dcs_zx[0] != lastMoveZ) {
-							cmd2 = 'if witchcraft.onMove then witchcraft.onMove(event) end\n';
+							cmd2 = 'if witchcraft.onMove then return witchcraft.onMove(event) end\n';
 							lastMoveEventTime = Date.now()
 							lastMoveX = dcs_zx[1]; lastMoveZ = dcs_zx[0];
 						}

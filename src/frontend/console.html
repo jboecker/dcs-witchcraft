@@ -204,6 +204,90 @@ witchcraft.onMove = function(event)
     respawn_unit(event)
 end
 	</div>
+	<div title="move units (Lua Interaction)">
+
+if witchcraft.unitUpdateInterval == 0 then witchcraft.unitUpdateInterval = .5 end
+	
+witchcraft.unitmover = {}
+witchcraft.unitmover.moving = false
+witchcraft.unitmover.heading = 0.0
+witchcraft.unitmover.hdgstep = math.pi/16
+
+witchcraft.unitmover.do_move = function(event)
+    local un = witchcraft.unitmover.unitName
+    local gn = Unit.getByName(un):getGroup():getName()
+    
+	local groupTable = mist.utils.deepCopy(mist.DBs.groupsByName[gn])
+    for _, unit in pairs(groupTable.units) do
+        if unit.unitName == un then
+            unit.heading = witchcraft.unitmover.heading
+            unit.x = event.vec2.x
+            unit.y = event.vec2.y
+        else
+            local u = Unit.getByName(unit.unitName)
+            if u and u:isExist() then
+                local pos = u:getPosition()
+                local hdg = math.pi / 2 -math.atan2(pos.x.x, pos.x.z)
+                unit.x = pos.p.x
+                unit.y = pos.p.z
+                unit.heading = hdg
+            end 
+        end
+    end
+    mist.dynAdd(groupTable)
+end
+
+-- define event handlers
+-- event handlers will be passed an event object with the
+-- following properties:
+--     vec2: click position
+--     vec3: click position (altitude determined by land.getHeight)
+
+-- onClick: called for every click on the map
+witchcraft.onClick = nil
+
+-- onSingleClick: called after 250 ms when OpenLayers has
+-- determined this is not a drag action or double click
+witchcraft.onSingleClick = function(event)
+	if witchcraft.unitmover.moving then
+        witchcraft.unitmover.moving = false
+        return
+    end
+    
+    if not event.clickedUnitName then return end
+    
+    witchcraft.unitmover.unitName = event.clickedUnitName
+    local pos = Unit.getByName(event.clickedUnitName):getPosition()
+    local hdg = math.pi / 2 -math.atan2(pos.x.x, pos.x.z)
+    witchcraft.unitmover.heading = hdg
+    witchcraft.unitmover.moving = true
+    witchcraft.unitmover.do_move(event)    
+end
+
+-- onDblClick: for double clicks
+witchcraft.onDblClick = nil
+
+-- onMousewheel: handles mousewheel events
+-- event.deltaY has the direction info (typically +3 or -3)
+witchcraft.onMousewheel = function(event)
+    if not witchcraft.unitmover.moving then return end
+    if event.deltaY < 0 then
+        witchcraft.unitmover.heading = witchcraft.unitmover.heading - witchcraft.unitmover.hdgstep
+    else
+        witchcraft.unitmover.heading = witchcraft.unitmover.heading + witchcraft.unitmover.hdgstep
+    end
+    witchcraft.unitmover.do_move(event)
+end
+
+-- onMove: called when the pointer is moved over the map
+-- rate-limited to 10 times per second
+witchcraft.onMove = function(event)
+    if not witchcraft.unitmover.moving then return end
+    witchcraft.unitmover.do_move(event) 
+end
+
+	
+	</div>
 	<div title="disable all Lua Interaction event handlers">
 witchcraft.onClick = nil
 witchcraft.onSingleClick = nil

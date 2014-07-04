@@ -56,7 +56,38 @@
           <option value="White">White</option>
         </select>
       </div>
-      
+	  
+      <div ng-show="ui.activeTool == 'savepos-tool'">
+		Original Mission File (.miz): <input type="file" id="savepos-file-input"><br>
+		<button ng-click="ui.savepos()">Save As</button><br>
+		<span id="savepos-status"></span>
+		<div id="savepos-lua" style="display: none;">
+local mission_copy = mist.utils.deepCopy(env.mission)
+for coa_name, coa_data in pairs(mission_copy.coalition) do
+    for cntry_id, cntry_data in pairs(coa_data.country) do
+        for obj_type_name, obj_type_data in pairs(cntry_data) do
+            if obj_type_name == "helicopter" or obj_type_name == "ship" or obj_type_name == "plane" or obj_type_name == "vehicle" then	-- only these types have points						
+                for group_num, group_data in pairs(obj_type_data.group) do
+                    for unit_num, unit_data in pairs(group_data.units) do
+                        local u = Unit.getByName(unit_data.name)
+                        if u and u:isExist() then
+                            local pos = u:getPosition()
+							local hdg = math.pi / 2 -math.atan2(pos.x.x, pos.x.z)
+                            unit_data.x = pos.p.x
+                            unit_data.y = pos.p.z
+                            unit_data.heading = hdg
+                        end
+                    end
+                end
+            end --if obj_type_name == "helicopter" or obj_type_name == "ship" or obj_type_name == "plane" or obj_type_name == "vehicle" or obj_type_name == "static" then
+        end
+    end
+end
+
+return mist.utils.serialize("mission", mission_copy)
+		</div>
+      </div>
+	  
       <div ng-show="ui.activeTool == 'lua-interaction-tool'">
         Double-click the map for lua magic!
       </div>	  
@@ -80,6 +111,13 @@
 
   </body>
   <script src="/js/vendor/jquery/jquery-2.1.1.min.js"></script>
+
+  <script src="js/vendor/zip.js/WebContent/zip.js"></script>
+  <script src="js/vendor/zip.js/WebContent/inflate.js"></script>
+  <script src="js/vendor/zip.js/WebContent/deflate.js"></script>
+  <script src="js/vendor/zip.js/WebContent/zip-fs.js"></script>
+  <script src="js/vendor/URI.js/URI.js"></script>
+  
   <script src="bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
   <script src="/js/vendor/lodash/dist/lodash.js"></script>
   <script>var lodash = _;</script>
@@ -98,7 +136,7 @@
     });
     
   </script>
-
+ 
   <script src="/js/app.js"></script>
   <script src="/js/unitdata.js"></script>
   <script src="/js/controllers/map.js"></script>
