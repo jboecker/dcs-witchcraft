@@ -463,3 +463,5 @@ var livedataserver = net.createServer(function(ldsocket) {
 process.on('uncaughtException', function(err) {
     console.log("UNCAUGHT EXCEPTION: ", err.stack);
 });
+
+console.log("Waiting for DCS to connect...")
