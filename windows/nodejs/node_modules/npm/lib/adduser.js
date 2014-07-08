@@ -15,6 +15,7 @@ try {
 adduser.usage = "npm adduser\nThen enter stuff at the prompts"
 
 function adduser (args, cb) {
+  npm.spinner.stop()
   if (!crypto) return cb(new Error(
     "You must compile node with ssl support to use the adduser feature"))
 
@@ -22,7 +23,6 @@ function adduser (args, cb) {
           , p : npm.config.get("_password") || ""
           , e : npm.config.get("email") || ""
           }
-    , changed = false
     , u = {}
     , fns = [readUsername, readPassword, readEmail, save]
 
@@ -131,9 +131,10 @@ function save (c, u, cb) {
     registry.username = u.u
     registry.password = u.p
   }
-
+  npm.spinner.start()
   // save existing configs, but yank off for this PUT
-  registry.adduser(u.u, u.p, u.e, function (er) {
+  registry.adduser(npm.config.get("registry"), u.u, u.p, u.e, function (er) {
+    npm.spinner.stop()
     if (er) return cb(er)
     registry.username = u.u
     registry.password = u.p

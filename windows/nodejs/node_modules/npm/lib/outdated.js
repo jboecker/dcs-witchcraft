@@ -39,7 +39,7 @@ function outdated (args, silent, cb) {
   if (typeof cb !== "function") cb = silent, silent = false
   var dir = path.resolve(npm.dir, "..")
   outdated_(args, dir, {}, 0, function (er, list) {
-    if (er || silent) return cb(er, list)
+    if (er || silent || list.length === 0) return cb(er, list)
     if (npm.config.get("json")) {
       console.log(makeJSON(list))
     } else if (npm.config.get("parseable")) {
@@ -70,8 +70,7 @@ function outdated (args, silent, cb) {
 
 // [[ dir, dep, has, want, latest ]]
 function makePretty (p) {
-  var parseable = npm.config.get("parseable")
-    , dep = p[1]
+  var dep = p[1]
     , dir = path.resolve(p[0], "node_modules", dep)
     , has = p[2]
     , want = p[3]
@@ -155,12 +154,33 @@ function outdated_ (args, dir, parentHas, depth, cb) {
   }
   var deps = null
   readJson(path.resolve(dir, "package.json"), function (er, d) {
+    d = d || {}
     if (er && er.code !== "ENOENT" && er.code !== "ENOTDIR") return cb(er)
     deps = (er) ? true : (d.dependencies || {})
+
+    if (npm.config.get("save-dev")) {
+      deps = d.devDependencies || {}
+      return next()
+    }
+
+    if (npm.config.get("save")) {
+      // remove optional dependencies from dependencies during --save.
+      Object.keys(d.optionalDependencies || {}).forEach(function (k) {
+        delete deps[k]
+      })
+      return next()
+    }
+
+    if (npm.config.get("save-optional")) {
+      deps = d.optionalDependencies || {}
+      return next()
+    }
+
     var doUpdate = npm.config.get("dev") ||
                     (!npm.config.get("production") &&
                     !Object.keys(parentHas).length &&
                     !npm.config.get("global"))
+
     if (!er && d && doUpdate) {
       Object.keys(d.devDependencies || {}).forEach(function (k) {
         if (!(k in parentHas)) {
@@ -204,7 +224,7 @@ function outdated_ (args, dir, parentHas, depth, cb) {
     if (!has || !deps) return
     if (deps === true) {
       deps = Object.keys(has).reduce(function (l, r) {
-        l[r] = "*"
+        l[r] = "latest"
         return l
       }, {})
     }
@@ -247,16 +267,13 @@ function shouldUpdate (args, dir, dep, has, req, depth, cb) {
   if (isGitUrl(url.parse(req)))
     return doIt("git", "git")
 
-  var registry = npm.registry
   // search for the latest package
-  registry.get(dep, function (er, d) {
+  var uri = url.resolve(npm.config.get("registry"), dep)
+  npm.registry.get(uri, null, function (er, d) {
     if (er) return cb()
     if (!d || !d['dist-tags'] || !d.versions) return cb()
     var l = d.versions[d['dist-tags'].latest]
     if (!l) return cb()
-
-    // set to true if found in doc
-    var found = false
 
     var r = req
     if (d['dist-tags'][req])
@@ -273,7 +290,7 @@ function shouldUpdate (args, dir, dep, has, req, depth, cb) {
     }
 
     // We didn't find the version in the doc.  See if cache can find it.
-    cache.add(dep, req, onCacheAdd)
+    cache.add(dep, req, false, onCacheAdd)
 
     function onCacheAdd(er, d) {
       // if this fails, then it means we can't update this thing.
