@@ -1,0 +1,18 @@
+{
+  "name": "ol3",
+  "version": "3.0.0-beta",
+  "main": [
+    "ol-whitespace.js",
+    "ol.css"
+  ],
+  "homepage": "https://github.com/nd0ut/ol3-bower",
+  "_release": "3.0.0-beta",
+  "_resolution": {
+    "type": "version",
+    "tag": "3.0.0-beta",
+    "commit": "334522f798fe3defec061218ae898f6adf53c601"
+  },
+  "_source": "git://github.com/nd0ut/ol3-bower.git",
+  "_target": "~3.0.0-beta",
+  "_originalSource": "ol3-unofficial"
+}

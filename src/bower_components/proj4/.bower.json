@@ -1,0 +1,33 @@
+{
+  "name": "proj4",
+  "version": "1.4.0",
+  "homepage": "https://github.com/proj4js/proj4js",
+  "description": "Proj4js is a JavaScript library to transform point coordinates from one coordinate system to another, including datum transformations.",
+  "main": "dist/proj4.js",
+  "keywords": [
+    "gis",
+    "projections",
+    "geospatial",
+    "transform",
+    "datum"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "almond",
+    "src"
+  ],
+  "_release": "1.4.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v1.4.0",
+    "commit": "fd8c1806862814b637551e8d02b9274d501c7b06"
+  },
+  "_source": "git://github.com/proj4js/proj4js.git",
+  "_target": "1.4.0",
+  "_originalSource": "git://github.com/proj4js/proj4js.git"
+}
