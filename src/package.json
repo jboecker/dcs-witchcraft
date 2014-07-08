@@ -1,0 +1,14 @@
+{
+    "name": "dcs-gameboard",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "socket.io": "*",
+        "express": "*",
+        "q": "*",
+	"proj4": "*",
+	"three": "*",
+	"lodash":"*",
+        "data-structures":"*"
+    }
+}

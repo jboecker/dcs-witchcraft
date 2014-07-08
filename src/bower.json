@@ -1,0 +1,13 @@
+{
+  "name": "DCS Witchcraft",
+  "private": "true",
+  "dependencies": {
+    "angular-bootstrap": "~0.11.0",
+    "ol3-unofficial": "~3.0.0-beta",
+    "lodash": "~2.4.1",
+    "codemirror": "~4.3.0",
+    "jquery": "~2.1.1",
+    "proj4": "git://github.com/proj4js/proj4js.git#1.4.0",
+    "zip.js": "*"
+  }
+}
