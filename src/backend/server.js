@@ -17,7 +17,10 @@ var missionModel = new MissionModel(function(eventname, data) {
 });
 
 */
-app.use(express.static(__dirname+'/../frontend'))
+console.log(__dirname)
+ app.use('/bower_components', express.static(__dirname+'/../bower_components'))
+    .use('/vendor_js', express.static(__dirname+'/../vendor_js'))
+	.use(express.static(__dirname+'/../frontend'))
     .get('/', function(request, response) {
         response.render('../frontend/index.html');
     });

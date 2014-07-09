@@ -1,0 +1,34 @@
+.luasnippet-input {
+}
+
+.luasnippet-status {
+}
+
+.luasnippet-codemirror-noscrollbars .CodeMirror-gutter {
+	background: linear-gradient(to right, orange, #eee, #eee);
+}
+
+.luasnippet-codemirror-noscrollbars .CodeMirror-scroll {
+	overflow-y: hidden;
+	overflow-x: auto;
+}
+
+.luasnippet {
+	margin-top: 10px;
+	margin-left: 10px;
+	margin-right: 10px;
+	border-radius: 5px;
+	padding: 5px;
+	border: 1px solid #ddd;
+}
+
+.luasnippet-controls {
+	float: right;
+	background-color: inherit;
+	margin-right: 10px;
+}
+
+.luasnippetlist-addbutton {
+	margin-left: 10px;
+	margin-top: 10px;
+}

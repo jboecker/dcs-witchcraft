@@ -1,0 +1,17 @@
+<div style="background-color: #eee;">
+	<div class="luasnippet-input"><!-- editor is attached here --></div>
+	<div class="luasnippet-status">
+		<span>{{ status_text }}</span><i ng-show="status == 'waiting'" class="fa fa-cog fa-spin"></i>
+		<span ng-show="snippetlist"><button class="btn btn-xs btn-danger pull-right" ng-click="snippetlist.removeSnippet(snippet.id)">delete</button> </span>
+		<span ng-show="templates">
+			<div class="btn-group btn-group-xs pull-right" dropdown>
+				<button type="button" class="btn btn-primary btn-xs dropdown-toggle">templates <span class="caret"></span></button>
+				<ul class="dropdown-menu" role="menu">
+					<li ng-repeat="template in templates track by $index"><a href="#" ng-click="templateClicked(template)">{{ template.name }}</a></li>
+				</ul>
+			</div>
+		</span>
+		<div style="clear: both;"></div>
+	</div>
+	<div class="luasnippet-output"><!-- output editor is attached here --></div>
+</div>

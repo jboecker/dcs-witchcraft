@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html ng-app="witchcraft">
+	<head>
+		<title>Lua Console</title>
+		<link rel="stylesheet" href="/bower_components/bootstrap-css/css/bootstrap.css">
+		<link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.css">
+		<link rel="stylesheet" href="/bower_components/codemirror/lib/codemirror.css">
+		<link rel="stylesheet" href="/bower_components/codemirror/theme/neat.css">
+		<link rel="stylesheet" href="/styles/witchcraft.css">
+	</head>
+	<body>
+	
+	<div witchcraft-luasnippetlist templates="templates"></div>
+		
+		<div style="display: none;">
+			<div witchcraft-lua-template title="clear"></div>
+			<div witchcraft-lua-template title="list all unit IDs">
+		-- requires MiST to be included
+		local unit_names = {}
+		for _, u in pairs(mist.DBs.aliveUnits) do
+			unit_names[#unit_names+1] = u.unit:getName()
+		end
+		return unit_names
+			</div>
+			<div witchcraft-lua-template title="check user flag">
+		-- to set a flag:
+		-- trigger.action.setUserFlag(42, 23) -- set flag 42 to 23
+		return trigger.misc.getUserFlag(42)
+			</div>
+			<div witchcraft-lua-template title="_G dump using MiST">
+		return mist.utils.tableShow(_G)
+			</div>
+			<div witchcraft-lua-template title="spawn HMMWVs (Lua Interaction)">
+		-- 1. Execute this code
+		-- 2. In another tab, have the map open and select the "Lua Interaction" tool
+		-- 3. Place the camera in DCS: World so it looks at where you are about to place units
+		-- 4. Mousewheel rotates, left click places a HMMWV
+		witchcraft.heading = 0.0 -- global variable
+		function respawn_unit(event, copy)
+			lastevent = event
+
+			local unitsTable = {
+				["visible"] = false,
+				["taskSelected"] = true,
+				["route"] = 
+				{
+					["spans"] = 
+					{
+					}, -- end of ["spans"]
+					["points"] = 
+					{
+						[1] = 
+						{
+							["alt"] = event.vec3.y,
+							["type"] = "Turning Point",
+							["ETA"] = 0,
+							["alt_type"] = "BARO",
+							["formation_template"] = "",
+							["y"] = event.vec2.y,
+							["x"] = event.vec2.x,
+							["ETA_locked"] = true,
+							["speed"] = 5.5555555555556,
+							["action"] = "Off Road",
+							["task"] = 
+							{
+								["id"] = "ComboTask",
+								["params"] = 
+								{
+									["tasks"] = 
+									{
+										[1] = 
+										{
+											["enabled"] = true,
+											["auto"] = true,
+											["id"] = "WrappedAction",
+											["number"] = 1,
+											["params"] = 
+											{
+												["action"] = 
+												{
+													["id"] = "EPLRS",
+													["params"] = 
+													{
+														["value"] = true,
+														["groupId"] = 2,
+													}, -- end of ["params"]
+												}, -- end of ["action"]
+											}, -- end of ["params"]
+										}, -- end of [1]
+									}, -- end of ["tasks"]
+								}, -- end of ["params"]
+							}, -- end of ["task"]
+							["speed_locked"] = true,
+						}, -- end of [1]
+					}, -- end of ["points"]
+				}, -- end of ["route"]
+				["groupId"] = 30,
+				["tasks"] = 
+				{
+				}, -- end of ["tasks"]
+				["hidden"] = false,
+				["units"] = 
+				{
+					[1] = 
+					{
+						["y"] = event.vec2.y,
+						["type"] = "M1043 HMMWV Armament",
+						["name"] = "cursor_unit",
+						["unitId"] = 30,
+						["heading"] = witchcraft.heading,
+						["playerCanDrive"] = true,
+						["skill"] = "Average",
+						["x"] = event.vec2.x,
+					}, -- end of [1]
+				}, -- end of ["units"]
+				["y"] = event.vec2.y,
+				["x"] = event.vec2.x,
+				["name"] = "CursorGroup",
+				["start_time"] = 0,
+				["task"] = "Ground Nothing",
+			}
+
+			unitsTable.country = "USA"
+			unitsTable.category = "vehicle"
+
+			if copy then
+				unitsTable.groupId = nil
+				unitsTable.name = nil
+				unitsTable.units[1].unitId = nil
+				unitsTable.units[1].name = nil
+			end
+
+			mist.dynAdd(unitsTable)
+
+		end
+
+		-- define event handlers
+		-- event handlers will be passed an event object with the
+		-- following properties:
+		--     vec2: click position
+		--     vec3: click position (altitude determined by land.getHeight)
+
+		-- onClick: called for every click on the map
+		witchcraft.onClick = nil
+
+		-- onSingleClick: called after 250 ms when OpenLayers has
+		-- determined this is not a drag action or double click
+		witchcraft.onSingleClick = function(event)
+			Unit.getByName("cursor_unit"):destroy()
+			respawn_unit(event, true)
+			respawn_unit(event)
+		end
+
+		-- onDblClick: for double clicks
+		witchcraft.onDblClick = nil
+
+		-- onMousewheel: handles mousewheel events
+		-- event.deltaY has the direction info (typically +3 or -3)
+		witchcraft.onMousewheel = function(event)
+			if event.deltaY < 0 then
+				witchcraft.heading = witchcraft.heading - .1
+			else
+				witchcraft.heading = witchcraft.heading + .1
+			end
+			respawn_unit(event)
+		end
+
+		-- onMove: called when the pointer is moved over the map
+		-- rate-limited to 10 times per second
+		witchcraft.onMove = function(event)
+			respawn_unit(event)
+		end
+			</div>
+			<div witchcraft-lua-template title="move units (Lua Interaction)">
+
+		if witchcraft.unitUpdateInterval == 0 then witchcraft.unitUpdateInterval = .5 end
+			
+		witchcraft.unitmover = {}
+		witchcraft.unitmover.moving = false
+		witchcraft.unitmover.heading = 0.0
+		witchcraft.unitmover.hdgstep = math.pi/16
+
+		witchcraft.unitmover.do_move = function(event)
+			local un = witchcraft.unitmover.unitName
+			local gn = Unit.getByName(un):getGroup():getName()
+			
+			local groupTable = mist.utils.deepCopy(mist.DBs.groupsByName[gn])
+			for _, unit in pairs(groupTable.units) do
+				if unit.unitName == un then
+					unit.heading = witchcraft.unitmover.heading
+					unit.x = event.vec2.x
+					unit.y = event.vec2.y
+				else
+					local u = Unit.getByName(unit.unitName)
+					if u and u:isExist() then
+						local pos = u:getPosition()
+						local hdg = math.pi / 2 -math.atan2(pos.x.x, pos.x.z)
+						unit.x = pos.p.x
+						unit.y = pos.p.z
+						unit.heading = hdg
+					end 
+				end
+			end
+			mist.dynAdd(groupTable)
+		end
+
+		-- define event handlers
+		-- event handlers will be passed an event object with the
+		-- following properties:
+		--     vec2: click position
+		--     vec3: click position (altitude determined by land.getHeight)
+
+		-- onClick: called for every click on the map
+		witchcraft.onClick = nil
+
+		-- onSingleClick: called after 250 ms when OpenLayers has
+		-- determined this is not a drag action or double click
+		witchcraft.onSingleClick = function(event)
+			if witchcraft.unitmover.moving then
+				witchcraft.unitmover.moving = false
+				return
+			end
+			
+			if not event.clickedUnitName then return end
+			
+			witchcraft.unitmover.unitName = event.clickedUnitName
+			local pos = Unit.getByName(event.clickedUnitName):getPosition()
+			local hdg = math.pi / 2 -math.atan2(pos.x.x, pos.x.z)
+			witchcraft.unitmover.heading = hdg
+			witchcraft.unitmover.moving = true
+			witchcraft.unitmover.do_move(event)    
+		end
+
+		-- onDblClick: for double clicks
+		witchcraft.onDblClick = nil
+
+		-- onMousewheel: handles mousewheel events
+		-- event.deltaY has the direction info (typically +3 or -3)
+		witchcraft.onMousewheel = function(event)
+			if not witchcraft.unitmover.moving then return end
+			if event.deltaY < 0 then
+				witchcraft.unitmover.heading = witchcraft.unitmover.heading - witchcraft.unitmover.hdgstep
+			else
+				witchcraft.unitmover.heading = witchcraft.unitmover.heading + witchcraft.unitmover.hdgstep
+			end
+			witchcraft.unitmover.do_move(event)
+		end
+
+		-- onMove: called when the pointer is moved over the map
+		-- rate-limited to 10 times per second
+		witchcraft.onMove = function(event)
+			if not witchcraft.unitmover.moving then return end
+			witchcraft.unitmover.do_move(event) 
+		end
+
+			
+			</div>
+			<div witchcraft-lua-template title="disable all Lua Interaction event handlers">
+		witchcraft.onClick = nil
+		witchcraft.onSingleClick = nil
+		witchcraft.onDblClick = nil
+		witchcraft.onMousewheel = nil
+		witchcraft.onMove = nil
+			</div>
+			<div witchcraft-lua-template title="enable unit updates">
+		-- units on the map will be updated approximately two times per second
+		witchcraft.unitUpdateInterval = .5
+			</div>
+			<div witchcraft-lua-template title="disable unit updates">
+		-- disable regular unit updates
+		witchcraft.unitUpdateInterval = 0
+			</div>
+		</div>
+		
+		<!-- general utility libraries -->
+		<script src="/bower_components/jquery/dist/jquery.min.js"></script>
+		<script src="/bower_components/lodash/dist/lodash.js"></script>
+		<script src="/bower_components/angular/angular.js"></script>
+		<script src="/bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		
+		<!-- CodeMirror -->
+		<script src="/bower_components/codemirror/lib/codemirror.js"></script>
+		<script src="/bower_components/codemirror/mode/lua/lua.js"></script>
+		<script src="/bower_components/codemirror/addon/selection/active-line.js"></script>
+		
+		<!-- Lua Console -->
+		<script src="/scripts/witchcraft.js"></script>
+		<script src="/scripts/services/socket.js"></script>
+		<script src="/scripts/services/luashell.js"></script>
+		<script src="/scripts/directives/luasnippetlist.js"></script>
+		<script src="/scripts/directives/luasnippet.js"></script>
+		<script src="/scripts/services/luatemplateregistry.js"></script>
+		<script src="/scripts/directives/luatemplate.js"></script>
+		
+	</body>
+</html>
