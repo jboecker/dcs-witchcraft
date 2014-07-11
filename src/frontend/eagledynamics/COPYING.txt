@@ -1,0 +1,2 @@
+The content of this directory is derived from DCS: World, (C) Eagle Dynamics
+and is redistributed with their permission.
