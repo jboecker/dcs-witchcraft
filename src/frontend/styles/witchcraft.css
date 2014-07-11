@@ -32,3 +32,35 @@
 	margin-left: 10px;
 	margin-top: 10px;
 }
+
+#popup {
+    position: absolute;
+    margin: 20px;
+    background-color: #eee;
+    border-radius: 5px;
+    min-width: 100px;
+    min-height: 100px;
+}
+
+#toolbar {
+    position: absolute;
+    top: 10px;
+    left: 60px;
+    border-radius: 5px;
+    background-color: #eee;
+    padding: 5px;
+}
+
+#tooloptions {
+    position: absolute;
+    top: 80px;
+    left: 10px;
+    border-radius: 5px;
+    background-color: #eee;
+    padding: 5px;
+    opacity: .9;
+}
+
+div.tooltip-inner {
+	min-width: 200px;
+}

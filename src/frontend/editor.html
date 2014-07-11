@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html ng-app="witchcraft">
+	<head>
+		<title>Mission Editor</title>
+		<link rel="stylesheet" href="/bower_components/bootstrap-css/css/bootstrap.css">
+		<link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.css">
+		<link rel="stylesheet" href="/bower_components/codemirror/lib/codemirror.css">
+		<link rel="stylesheet" href="/bower_components/codemirror/theme/neat.css">
+		<link rel="stylesheet" href="/bower_components/ol3-unofficial/ol.css">
+		<link rel="stylesheet" href="/styles/witchcraft.css">
+	</head> 
+	<body>
+		
+		<div ng-controller="MapController" style="height: 100%; width: 100%;"></div>
+		<div witchcraft-toolbar tools="file-menu-tool move-unit-tool"></div>
+
+		<div id="tooloptions" ng-show="ui.activeTool">
+			<div ng-show="ui.activeTool == 'file-menu-tool'">
+				<div class="btn-group-vertical">
+					<button type="button" class="btn btn-default" tooltip-popup-delay="250" tooltip-placement="right"
+					ng-click="ui.loadMissionFromDCS()" 
+					tooltip="Load the mission running in the connected DCS: World instance into the editor."
+					>Load Mission from DCS</button>
+					<button type="button" class="btn btn-default" tooltip-popup-delay="250" tooltip-placement="right"
+					ng-click="ui.saveMissionDialog()" 
+					tooltip="Save the mission to a new .miz file."
+					>Save Mission</button>
+				</div>
+
+				
+			</div>
+			<div ng-show="ui.activeTool == 'move-tool'">
+				<ul>
+					<li>Drag to pan</li>
+					<li>Shift+Drag to zoom to area</li>
+					<li>Mousewheel to zoom</li>
+					<li>Alt+Shift+Drag to rotate</li>
+				</ul>
+			</div>
+		</div>
+		
+		<!-- general utility libraries -->
+		<script src="/bower_components/jquery/dist/jquery.min.js"></script>
+		<script src="/bower_components/lodash/dist/lodash.js"></script>
+		<script src="/bower_components/angular/angular.js"></script>
+		<script src="/bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		
+		<!-- CodeMirror -->
+		<script src="/bower_components/codemirror/lib/codemirror.js"></script>
+		<script src="/bower_components/codemirror/mode/lua/lua.js"></script>
+		<script src="/bower_components/codemirror/addon/selection/active-line.js"></script>
+		
+		<!-- OpenLayers and proj4js -->
+		<script src="/vendor_js/proj4js-1.1.0/lib/proj4js-combined.js"></script>
+		<script src="/bower_components/ol3-unofficial/ol-whitespace.js"></script>
+		<script>
+			ol.proj.configureProj4jsProjection({
+				code: "dcs",
+				units: ol.proj.Units.METERS,
+			});
+			var lodash = _;
+		</script>
+		<script src="/scripts/mapbrowsereventproxy.js"></script>
+		
+		<!-- zip.js -->
+		<script src="/bower_components/zip.js/WebContent/zip.js"></script>
+		<script src="/bower_components/zip.js/WebContent/inflate.js"></script>
+		<script src="/bower_components/zip.js/WebContent/deflate.js"></script>
+		<script src="/bower_components/zip.js/WebContent/zip-fs.js"></script>
+		<script src="/vendor_js/URI.js/URI.js"></script>
+		<script src="/bower_components/FileSaver/FileSaver.js"></script>
+		
+		<!-- Mission Editor -->
+		<script src="/common/missionmodel.js"></script>
+		<script src="/scripts/witchcraft.js"></script>
+		<script src="/scripts/unitdata.js"></script>
+		<script src="/vendor_js/StateTree/statetree.js"></script>
+		<script src="/scripts/services/uistatetree.js"></script>
+		<script src="/scripts/editor_ui.js"></script>
+		<script src="/scripts/services/socket.js"></script>
+		<script src="/scripts/services/luashell.js"></script>
+		<script src="/scripts/services/model.js"></script>
+		<script src="/scripts/controllers/map.js"></script>
+		<script src="/scripts/directives/toolbar.js"></script>
+		
+	</body>
+</html>

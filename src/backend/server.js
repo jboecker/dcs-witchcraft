@@ -9,17 +9,18 @@ var _ = require("lodash");
 var appevents = new events.EventEmitter();
 var assert = require("assert");
 var Graph = require("data-structures").Graph;
-/*
-var MissionModel = require("../frontend/js/missionmodel.js").MissionModel;
 
-var missionModel = new MissionModel(function(eventname, data) {
-	io.sockets.emit(eventname, data);
+var missionModel = require("../common/missionmodel.js").makeMM();
+var groupsToSync = {};
+setInterval(function() { appevents.emit("syncGroups") }, 100);
+
+missionModel.on('change', function(changes) {
+	io.sockets.emit('missionModelChange', changes);
 });
 
-*/
-console.log(__dirname)
  app.use('/bower_components', express.static(__dirname+'/../bower_components'))
     .use('/vendor_js', express.static(__dirname+'/../vendor_js'))
+	.use('/common', express.static(__dirname+'/../common'))
 	.use(express.static(__dirname+'/../frontend'))
     .get('/', function(request, response) {
         response.render('../frontend/index.html');
@@ -31,13 +32,15 @@ io.sockets.on('connection', function(socket) {
     });
     
     socket.on('init', function(data) {
-        socket.emit('update', { objects: instance.objects, 
-                                deleted_object_ids: [] });
-        socket.join('players');
+		socket.emit('missionModelChange', {type: 'loadMission', mission: missionModel.toMission()});
     });
+	
+	socket.on('requestMissionModelChange', function(changes) {
+		missionModel.processChangeRequest(changes);
+	});
     
     socket.on('log', function(data) {
-        console.log("*** LOG: ", data);
+        console.log("*** LOG:", data);
     });
     
     socket.on('smoke', function(params) {
@@ -58,6 +61,10 @@ var dcsconnector = net.createServer(function(dcs_socket) {
     console.log('DCS connected.');
     io.sockets.emit("dcs-connected");
     
+	missionModel.on('setGroup', function(group) {
+		groupsToSync[group.groupId] = group;
+	});
+	
     var linebuffer = '';
     dcs_socket.on('data', function(data) {
         linebuffer += data;
@@ -109,16 +116,28 @@ var dcsconnector = net.createServer(function(dcs_socket) {
                 io.sockets.emit("luaresult", msg);
             }
             if (msg.type == "log") {
-                io.sockets.emit("log", msg);
+                io.sockets.emit("log", msg.data);
+				console.log("*** LOG:", msg.data);
             }
-			/*
-            if (msg.type == "terrain-vis-update") {
-                appevents.emit("terrain-vis-update", msg);
-            }
-			*/
         } catch(e) {console.log(e.stack)}        
     });
 
+	appevents.on('syncGroups', function() {
+		_.each(groupsToSync, function(group) {
+			try {
+				dcs_socket.write(JSON.stringify({
+					type: "lua",
+					code: "witchcraft.syncJSONGroup(witchcraft.context.arg)",
+					name: 'syncgroup',
+					arg: group,
+				}).replace("\n","")+"\n");
+			} catch(e) {
+				console.log(e.stack);
+			}
+		});
+		groupsToSync = {};
+	});
+	
     appevents.on('smoke', function(params) {
         try {
             dcs_socket.write(JSON.stringify({
@@ -143,6 +162,7 @@ var dcsconnector = net.createServer(function(dcs_socket) {
                 type: "lua",
                 code: params.code,
 				name: params.name,
+				arg: params.arg,
             }).replace("\n","")+"\n");
         } catch(e) {
             console.log(e.stack);
