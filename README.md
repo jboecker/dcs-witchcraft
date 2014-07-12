@@ -10,6 +10,8 @@ Here's what works so far:
 * Lua debug console for interactive development and debugging of mission scripts
 * Mission Editor to adjust the positions of existing units (mirrored to the running mission so you can watch the final position in the 3D environment)
 
+[Watch the video walkthrough](http://www.dailymotion.com/video/x21d3ac_dcs-witchcraft-tutorial_videogames) to learn more.
+
 ## Initial Setup
 * Copy `witchcraft.lua` to `%USERPROFILE%\Saved Games\DCS\Scripts\` (e.g. `C:\Users\<Your Username>\Saved Games\DCS\Scripts\`).
 * Go to your DCS: World installation directory (most likely `C:\Program Files\Eagle Dynamics\DCS World`), open the `Scripts` subfolder and edit the file `MissionScripting.lua`.
