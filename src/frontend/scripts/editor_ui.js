@@ -166,13 +166,13 @@ witchcraft.run(["uistatetree", "luashell", function(uistatetree, luashell) {
         luaInteractionTool.enter(function() {
             uistatetree.getUIScope().activeTool = "lua-interaction-tool";
             
-            interaction = new witchcraft.MapBrowserEventProxy(function(event) {
+            interaction = new ol.witchcraft.MapBrowserEventProxy(function(event) {
 				var clickedUnitName = "nil";
 				var map = uistatetree.getMapController().getMap();
 				var pixel = map.getEventPixel(event.originalEvent);
 				map.forEachFeatureAtPixel(event.pixel, function(feature, layer) {
 					if (feature.get("object_type") == "liveunit")
-						clickedUnitName = '"'+feature.get("object_id").substr(9)+'"';
+						clickedUnitName = '"'+feature.get("unitName")+'"';
 				});
 				var dcs_zx = ol.proj.transform(event.coordinate, "EPSG:4326", "DCS");
 				var cmd2 = null;
@@ -199,6 +199,7 @@ witchcraft.run(["uistatetree", "luashell", function(uistatetree, luashell) {
 				if (event.type == goog.events.MouseWheelHandler.EventType.MOUSEWHEEL) {
 					cmd += 'event.deltaY = '+event.browserEvent.deltaY.toString()+'\n';
 					cmd2 = 'if witchcraft.onMousewheel then witchcraft.onMousewheel(event) end\n';
+					event.preventDefault();
 				}
 				if (!cmd2) return true;
 				

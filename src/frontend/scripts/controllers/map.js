@@ -99,6 +99,7 @@ witchcraft.controller('MapController', ['$rootScope', '$element', 'UNITDATA', 'l
 				heading: unit.heading,
                 unittype: unit.type,
 				unitId: unit.unitId,
+				unitName: unit.name,
             });
 			if (!UNITDATA[unit.type]) console.log("missing UNITDATA for type ", unit.type);
 			features.push(feature);
