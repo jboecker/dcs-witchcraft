@@ -29,68 +29,6 @@ witchcraft.run(["uistatetree", "socket", function(uistatetree, socket) {
 }]);
 
 witchcraft.run(["uistatetree", "socket", function(uistatetree, socket) {
-    var tool = uistatetree.toolStates.subState("clipmap-tool", function(clipmapTool) {
-        var oldVis;
-        clipmapTool.enter(function() {
-            uistatetree.getUIScope().activeTool = "clipmap-tool";
-            oldVis = uistatetree.getUIScope().visibleObjectTypes;
-            uistatetree.getUIScope().visibleObjectTypes = ["cliparea"];
-        });
-        clipmapTool.exit(function() {
-            uistatetree.getUIScope().visibleObjectTypes = oldVis;
-        });
-    });
-    uistatetree.registerTool("Define Visible Area", tool);
-    
-    tool.subState("clipmap-tool/add", function(addState) {
-        addState.defaultState();
-        
-        var interaction;
-        var featureOverlay;
-        var map;
-        
-        addState.enter(function() {
-            map = uistatetree.getMapController().getMap();
-            featureOverlay = uistatetree.getMapController().makeFeatureOverlay();
-            interaction = new ol.interaction.Draw({
-                features: featureOverlay.getFeatures(),
-                type: "Polygon"
-            });
-            interaction.on("drawend", function(event) {
-                featureOverlay.removeFeature(event.feature);
-                socket.emit("create-cliparea", event.feature.get("geometry").getCoordinates());
-            });
-            map.addInteraction(interaction);
-        });
-        addState.exit(function() {
-            map.removeInteraction(interaction);
-            featureOverlay.setMap(null);
-        });
-    });        
-
-    tool.subState("clipmap-tool/delete", function(delState) {
-        
-        var interaction;
-        var map;
-        
-        delState.enter(function() {
-            interaction = new ol.interaction.Select();
-            map = uistatetree.getMapController().getMap();
-            map.addInteraction(interaction);
-            
-            interaction.getFeatures().on("add", function(event) {
-                socket.emit("delete-object", event.element.get("object_id"));
-                interaction.getFeatures().remove(event.element);
-            });
-        });
-        delState.exit(function() {
-            map.removeInteraction(interaction);
-        });
-    });
-
-}]);
-
-witchcraft.run(["uistatetree", "socket", function(uistatetree, socket) {
     var tool = uistatetree.toolStates.subState("smoke-tool", function(smokeTool) {
         var interaction;
         uistatetree.getUIScope().smokeColor = "Green";
