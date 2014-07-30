@@ -113,6 +113,7 @@ var dcsconnector = net.createServer(function(dcs_socket) {
                 io.sockets.emit("smokeconfirm", msg);
             }
             if (msg.type == "luaresult") {
+				console.log("luaresult", msg);
                 io.sockets.emit("luaresult", msg);
             }
             if (msg.type == "log") {
@@ -131,6 +132,16 @@ var dcsconnector = net.createServer(function(dcs_socket) {
 					name: 'syncgroup',
 					arg: group,
 				}).replace("\n","")+"\n");
+				
+				
+				console.log(JSON.stringify({
+					type: "lua",
+					code: "witchcraft.syncJSONGroup(witchcraft.context.arg)",
+					name: 'syncgroup',
+					arg: group,
+				}));
+				
+				
 			} catch(e) {
 				console.log(e.stack);
 			}
