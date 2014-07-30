@@ -220,6 +220,20 @@ witchcraft.run(["uistatetree", "model", function(uistatetree, model) {
 							}
 						}
 					}, this);
+					
+					groupCopy.x = groupCopy.units[0].x;
+					groupCopy.y = groupCopy.units[0].y;
+					
+					if (groupCopy.route && groupCopy.route.points && groupCopy.route.points[0]) {
+						groupCopy.route.points[0].x = groupCopy.x;
+						groupCopy.route.points[0].y = groupCopy.y;
+					}
+					
+					if (groupCopy.route && groupCopy.route.spans && groupCopy.route.spans[0]) {
+						groupCopy.route.spans[0][0].x = groupCopy.x;
+						groupCopy.route.spans[0][0].y = groupCopy.y;
+					}
+					
 					if (modified && (Date.now() - lastMoveEventTime) > 0) {
 						lastMoveEventTime = Date.now();
 						model.changeMissionModel({ type: "setGroup", group: groupCopy });
