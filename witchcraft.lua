@@ -131,7 +131,11 @@ do
 			end
 		end
 		group.route = {}
-		mist.dynAdd(group)
+		if group.category == "static" then
+			mist.dynAddStatic(group)
+		else
+			mist.dynAdd(group)
+		end
 		witchcraft.groupNamesToSetInvisible[#witchcraft.groupNamesToSetInvisible+1] = group.name
 	end
 

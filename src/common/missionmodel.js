@@ -136,7 +136,7 @@ MissionModel.prototype.loadMission_ = function(mission) {
 						name: country.name,
 						id: country.id,
 					});
-					_.each(["vehicle", "ship", "plane", "helicopter"], function(category_name) {
+					_.each(["vehicle", "ship", "plane", "helicopter", "static"], function(category_name) {
 						var category = country[category_name];
 						if (category) {
 							_.each(category.group, function(group) {
