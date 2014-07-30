@@ -28,7 +28,7 @@ To start trying to connect to the node.js server, your mission will have to call
 
 Create a new trigger set to fire ONCE, create a new condition TIME IS MORE (1 second) and add two actions:
 
-1. a DO SCRIPT FILE action that loads [MIST](http://forums.eagle.ru/showthread.php?t=98616)
+1. a DO SCRIPT FILE action that loads [MIST](http://forums.eagle.ru/showthread.php?t=98616). Make sure you are using **MIST 3.3 or later!**
 2. a DO SCRIPT action with the text `witchcraft.start(_G)`
 
 ## Using the Debug Console and the Map
