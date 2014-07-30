@@ -64,7 +64,7 @@ do
 							group.y = group.units[1].y
 							group.route.points[1].x = group.units[1].x
 							group.route.points[1].y = group.units[1].y
-							if group.route.points[2] then
+							if group.route.spans and group.route.spans[1] then
 								group.route.spans[1][1].x = group.units[1].x
 								group.route.spans[1][1].y = group.units[1].y
 							end
