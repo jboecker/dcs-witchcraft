@@ -26,7 +26,10 @@ dofile(lfs.writedir()..[[Scripts\witchcraft.lua]])
 ## Preparing the Mission
 To start trying to connect to the node.js server, your mission will have to call `witchcraft.start(_G)`.
 
-Simply create a new trigger set to fire ONCE, create a new condition TIME IS MORE (1 second) and create a DO SCRIPT action with the text `witchcraft.start(_G)`.
+Create a new trigger set to fire ONCE, create a new condition TIME IS MORE (1 second) and add two actions:
+
+1. a DO SCRIPT FILE action that loads [MIST](http://forums.eagle.ru/showthread.php?t=98616)
+2. a DO SCRIPT action with the text `witchcraft.start(_G)`
 
 ## Using the Debug Console and the Map
 * Start the node.js server. If you are using windows, simply double-click `witchcraft.cmd` in the `windows` subfolder of this repository.
